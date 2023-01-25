@@ -8,6 +8,15 @@ var client = new window.Sketchfab(version, iframe);
 var error = function error() {
     console.error('Sketchfab API error');
 };
+function saveBase64AsFile(base64, fileName) {
+    var link = document.createElement("a");
+
+    document.body.appendChild(link); // for Firefox
+
+    link.setAttribute("href", base64);
+    link.setAttribute("download", fileName);
+    link.click();
+}
 var success = function success(api) {
     var target = [0.0, 0.0, 0.0];
     var currentCamera = 0;
@@ -25,6 +34,7 @@ var success = function success(api) {
             anchor.href = result;
             anchor.download = 'screenshot.png';
             anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
+            console.log(result)
             // document.getElementById('controls').appendChild(anchor);
         });
 
@@ -58,6 +68,7 @@ var success = function success(api) {
                 anchor.href = result;
                 anchor.download = 'screenshot.png';
                 anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
+                saveBase64AsFile(result,'tst.jpg')
                 // document.getElementById('controls').appendChild(anchor);
             });
             // download https://sketchfab.com/developers/viewer/examples?sample=Screenshot%20Save
