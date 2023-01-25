@@ -15,10 +15,17 @@ var success = function success(api) {
     _loop = function loop() {
         currentCamera++;
         console.log('=> Camera loop ', cameraPosition[currentCamera % 8].eye, target);
-        api.getScreenShot('image/png', function (err, result) {
-            if (!err) {
-                window.console.log(result); // 'data:image/png;base64,iVBORw0KG...'
-            }
+        // api.getScreenShot('image/png', function (err, result) {
+        //     if (!err) {
+        //         window.console.log(result); // 'data:image/png;base64,iVBORw0KG...'
+        //     }
+        // });
+        api.getScreenShot(800, 800, 'image/png', function (err, result) {
+            var anchor = document.createElement('a');
+            anchor.href = result;
+            anchor.download = 'screenshot.png';
+            anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
+            // document.getElementById('controls').appendChild(anchor);
         });
 
         api.setCameraLookAt(cameraPosition[currentCamera % 8].eye, target, 0, function (err) {
@@ -41,31 +48,38 @@ var success = function success(api) {
                 if (err) console.error(err);
                 console.log('=> Camera Start Callback');
             });
-            api.getScreenShot('image/png', function (err, result) {
-                if (!err) {
-                    window.console.log(result); // 'data:image/png;base64,iVBORw0KG...'
-                }
+            // api.getScreenShot('image/png', function (err, result) {
+            //     if (!err) {
+            //         window.console.log(result); // 'data:image/png;base64,iVBORw0KG...'
+            //     }
+            // });
+            api.getScreenShot(800, 800, 'image/png', function (err, result) {
+                var anchor = document.createElement('a');
+                anchor.href = result;
+                anchor.download = 'screenshot.png';
+                anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
+                // document.getElementById('controls').appendChild(anchor);
             });
             // download https://sketchfab.com/developers/viewer/examples?sample=Screenshot%20Save
 
-            // api.getRootMatrixNode(function (err, nodeID) {
-            //     var direction = 0;
-            //     setInterval(function () {
-            //         console.log('translate start');
-            //         api.translate(nodeID, [direction * 1, 0, 0, 1], {
-            //             duration: 15,
-            //             easing: easings[Math.floor(Math.random() * easings.length)]
-            //         }, function () {
-            //             console.log('translate callback');
-            //         });
-            //         console.log('rotate start');
-            //         api.rotate(nodeID, [Math.PI * 0.05 * direction, 0, 1, 0], {
-            //             duration: direction === -1 ? 2 : 8
-            //         }, function () {
-            //             console.log('rotate callback');
-            //         });
-            //     }, 1000);
-            // });
+            api.getRootMatrixNode(function (err, nodeID) {
+                var direction = 0;
+                setInterval(function () {
+                    console.log('translate start');
+                    api.translate(nodeID, [direction * 1, 0, 0, 1], {
+                        duration: 15,
+                        easing: easings[Math.floor(Math.random() * easings.length)]
+                    }, function () {
+                        console.log('translate callback');
+                    });
+                    console.log('rotate start');
+                    api.rotate(nodeID, [Math.PI * 0.05 * direction, 0, 1, 0], {
+                        duration: direction === -1 ? 2 : 8
+                    }, function () {
+                        console.log('rotate callback');
+                    });
+                }, 1000);
+            });
             setTimeout(_loop, 500);
         });
     });
