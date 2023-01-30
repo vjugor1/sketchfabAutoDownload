@@ -1,7 +1,7 @@
 //https://sketchfab.com/developers/viewer/examples?sample=Camera%20Animation
 var version = '1.12.1';
 var iframe = document.getElementById('api-frame');
-var uid = '7w7pAfrCfjovwykkEeRFLGw5SXS';
+var uid = '8bf24790f55e47a28fd53029eed9367d';
 var easings;
 var cameraPosition;
 var client = new window.Sketchfab(version, iframe);
@@ -86,15 +86,15 @@ client.init(uid, {
     autotsart: 1,
     camera: 0
 });
-easings = ['easeLinear', 'easeOutQuad', 'easeInQuad', 'easeInOutQuad', 'easeOutCubic', 'easeInCubic', 'easeInOutCubic', 'easeOutQuart', 'easeInQuart', 'easeInOutQuart', 'easeOutQuintic', 'easeInQuintic', 'easeInOutQuintic', 'easeOutSextic', 'easeInSextic', 'easeInOutSextic', 'easeOutSeptic', 'easeInSeptic', 'easeInOutSeptic', 'easeOutOctic', 'easeInOctic', 'easeInOutOctic', 'easeOutBack', 'easeInBack', 'easeInOutBack', 'easeOutCircle', 'easeInCircle', 'easeInOutCircle', 'easeOutElastic', 'easeInElastic', 'easeInOutElastic', 'easeOutBounce', 'easeInBounce', 'easeInOutBounce'];
+// easings = ['easeLinear', 'easeOutQuad', 'easeInQuad', 'easeInOutQuad', 'easeOutCubic', 'easeInCubic', 'easeInOutCubic', 'easeOutQuart', 'easeInQuart', 'easeInOutQuart', 'easeOutQuintic', 'easeInQuintic', 'easeInOutQuintic', 'easeOutSextic', 'easeInSextic', 'easeInOutSextic', 'easeOutSeptic', 'easeInSeptic', 'easeInOutSeptic', 'easeOutOctic', 'easeInOctic', 'easeInOutOctic', 'easeOutBack', 'easeInBack', 'easeInOutBack', 'easeOutCircle', 'easeInCircle', 'easeInOutCircle', 'easeOutElastic', 'easeInElastic', 'easeInOutElastic', 'easeOutBounce', 'easeInBounce', 'easeInOutBounce'];
 cameraPosition = [{
     eye: [0, -2, 0]
 }, {
-    eye: [0, -2, 0]
-}, {
     eye: [2, 0, 0]
+}, {
+    eye: [0, 2, 0]
 },
 {
-    eye: [2, 0, 0]
+    eye: [-2, 0, 0]
 }
 ];
