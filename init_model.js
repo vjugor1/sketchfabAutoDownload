@@ -8,11 +8,8 @@
 var version = '1.12.1';
 var iframe = document.getElementById('api-frame');
 
-var uid = '5d28dd1739e54d8f9cd74f16d1b52b58'; // gryphon
-// var uid = '2e99a64c5a90473d93dc153d631c780f'; //wardobe
-// var uid = '7w7pAfrCfjovwykkEeRFLGw5SXS'; //guy
-// var uid = '8bf24790f55e47a28fd53029eed9367d'; // billy poster
-
+var uid = '2e99a64c5a90473d93dc153d631c780f';
+var screenstaken = 0;
 var easings;
 var cameraPosition;
 var client = new window.Sketchfab(version, iframe);
@@ -50,9 +47,9 @@ var success = function success(api) {
         // console.log("currentCamera = ", currentCamera);
         if (initLen != 0) {
             currentCameraPosition = {
-                eye: [cameraPosition[currentCamera % cameraPosition.length].eye[0] * initLen,
-                cameraPosition[currentCamera % cameraPosition.length].eye[1] * initLen,
-                cameraPosition[currentCamera % cameraPosition.length].eye[2] * initLen + initLen * 0.3]
+                eye: [cameraPosition[currentCamera % cameraPosition.length].eye[0] * initLen * 2,
+                cameraPosition[currentCamera % cameraPosition.length].eye[1] * initLen * 2,
+                cameraPosition[currentCamera % cameraPosition.length].eye[2] * initLen * 2 + initLen * 0.6]
             };
         } else {
             currentCameraPosition = {
@@ -61,8 +58,8 @@ var success = function success(api) {
                 cameraPosition[currentCamera % cameraPosition.length].eye[2]]
             };
         };
-        console.log('=> Camera loop ', currentCameraPosition.eye, target);
-        api.setCameraLookAt(currentCameraPosition.eye, target, 2, function (err) {
+        console.log('=> Camera loop ', currentCameraPosition.eye, [0.0, 0.0, initLen * 0.6]);
+        api.setCameraLookAt(currentCameraPosition.eye, [0.0, 0.0, initLen * 0.6], 2, function (err) {
             if (err) console.error(err);
             console.log('=> Camera Start Callback');
         });
@@ -70,16 +67,18 @@ var success = function success(api) {
         api.setCameraLookAtEndAnimationCallback(function (err) {
             if (err) console.error(err);
             console.log('=> Camera End Callback');
-            // api.getScreenShot(800, 800, 'image/png', function (err, result) {
+            if ((initLen != 0) && (screenstaken <= 4) && (screenstaken > 0)) {
+                api.getScreenShot(800, 800, 'image/png', function (err, result) {
 
-            //     var anchor = document.createElement('a');
-            //     anchor.href = result;
-            //     anchor.download = 'screenshot.png';
-            //     anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
-            //     saveBase64AsFile(result, 'tst.jpg')
+                    var anchor = document.createElement('a');
+                    anchor.href = result;
+                    anchor.download = 'screenshot.png';
+                    anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
+                    saveBase64AsFile(result, uid + '/tst.jpg')
 
-            // });
-
+                });
+            };
+            screenstaken++;
             setTimeout(_loop, 5000);
         });
         currentCamera++;
@@ -91,19 +90,7 @@ var success = function success(api) {
             api.getRootMatrixNode(function (err, nodeID) {
                 var direction = 1;
                 setInterval(function () {
-                    // console.log('translate start');
-                    // api.translate(nodeID, [direction * 1, 0, 0, 1], {
-                    //     duration: 1,
-                    //     easing: easings[Math.floor(Math.random() * easings.length)]
-                    // }, function () {
-                    //     console.log('translate callback');
-                    // });
-                    // console.log('rotate start');
-                    // api.rotate(nodeID, [Math.PI * 0.05 * direction, 0, 1, 0], {
-                    //     duration: direction === -1 ? 2 : 8
-                    // }, function () {
-                    //     console.log('rotate callback');
-                    // });
+
                 }, 1000);
             });
             setTimeout(_loop, 5000);
