@@ -7,12 +7,14 @@
 
 var version = '1.12.1';
 var iframe = document.getElementById('api-frame');
-
+var iframe1 = document.getElementById('api-frame1');
 var uid = '2e99a64c5a90473d93dc153d631c780f';
+
 var screenstaken = 0;
 var easings;
 var cameraPosition;
 var client = new window.Sketchfab(version, iframe);
+var client1 = new window.Sketchfab(version, iframe1);
 var error = function error() {
     console.error('Sketchfab API error');
 };
@@ -96,8 +98,17 @@ var success = function success(api) {
             setTimeout(_loop, 5000);
         });
     });
+
 };
+
+
 client.init(uid, {
+    success: success,
+    error: error,
+    preload: 1,
+    autotsart: 1
+});
+client1.init(uid, {
     success: success,
     error: error,
     preload: 1,
