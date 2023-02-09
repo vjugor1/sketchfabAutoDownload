@@ -8,13 +8,20 @@
 var version = '1.12.1';
 var iframe = document.getElementById('api-frame');
 var iframe1 = document.getElementById('api-frame1');
-var uid = '2e99a64c5a90473d93dc153d631c780f';
-
+var iframe2 = document.getElementById('api-frame2');
+var uid = 'aa63eefcd48c41d3a9d41e0a32ee6dbb';
+var uid1 = 'be035da2e43e4f66a2405fa1508ef293';
+var uid2 = '493dddfd34ac4f19aa88ef6281f22459';
+var coeff = 10000;
+var date = Date.now();  //or use any other date
+date = date + 21000;
+var rounded_date = new Date(Math.round(date / coeff) * coeff);
 var screenstaken = 0;
 var easings;
 var cameraPosition;
 var client = new window.Sketchfab(version, iframe);
 var client1 = new window.Sketchfab(version, iframe1);
+var client2 = new window.Sketchfab(version, iframe2);
 var error = function error() {
     console.error('Sketchfab API error');
 };
@@ -28,13 +35,18 @@ function saveBase64AsFile(base64, fileName) {
 
 var success = function success(api) {
     var target = [0.0, 0.0, 0.0];
+
     var currentCamera = 0;
     // console.log("Initial position", init_pos)
     var _loop;
     var initPosReg = false;
     var initLen = 0;
+
     _loop = function loop() {
         if (!initPosReg) {
+            var local_time = Date.now();
+            console.log(rounded_date);
+            sleep(rounded_date - local_time);
             api.getCameraLookAt(function (err, camera) {
                 // console.log(camera.position); // [x, y, z]
                 // console.log(camera.target); // [x, y, z]
@@ -54,6 +66,7 @@ var success = function success(api) {
                 cameraPosition[currentCamera % cameraPosition.length].eye[2] * initLen * 2 + initLen * 0.6]
             };
         } else {
+
             currentCameraPosition = {
                 eye: [cameraPosition[currentCamera % cameraPosition.length].eye[0],
                 cameraPosition[currentCamera % cameraPosition.length].eye[1],
@@ -69,46 +82,68 @@ var success = function success(api) {
         api.setCameraLookAtEndAnimationCallback(function (err) {
             if (err) console.error(err);
             console.log('=> Camera End Callback');
-            if ((initLen != 0) && (screenstaken <= 4) && (screenstaken > 0)) {
-                api.getScreenShot(800, 800, 'image/png', function (err, result) {
+            // console.log('initlen', initLen);
+            // console.log('screenstaken', screenstaken);
+            if ((initLen != 0) && (screenstaken <= (4 + 2) * 3) && (screenstaken > 0)) {
+                console.log("curr cam", currentCameraPosition.eye[1])
+                if (currentCameraPosition.eye[1] != -1) {
+                    api.getScreenShot(800, 800, 'image/png', function (err, result) {
+                        var anchor = document.createElement('a');
+                        anchor.href = result;
+                        anchor.download = 'screenshot.png';
+                        anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
+                        saveBase64AsFile(result, uid + '/tst.jpg')
+                    });
+                };
 
-                    var anchor = document.createElement('a');
-                    anchor.href = result;
-                    anchor.download = 'screenshot.png';
-                    anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
-                    saveBase64AsFile(result, uid + '/tst.jpg')
-
-                });
             };
             screenstaken++;
-            setTimeout(_loop, 5000);
+
+            setTimeout(_loop, 8000);
         });
         currentCamera++;
         // api.setCameraEasing(easings[Math.floor(Math.random() * easings.length)]);
 
     };
     api.start(function () {
+
         api.addEventListener('viewerready', function () {
             api.getRootMatrixNode(function (err, nodeID) {
                 var direction = 1;
                 setInterval(function () {
 
-                }, 1000);
+                }, 2000);
             });
-            setTimeout(_loop, 5000);
+            setTimeout(_loop, 8000);
         });
     });
 
 };
 
+function sleep(miliseconds) {
+    const date = Date.now();
 
-client.init(uid, {
+    let currentDate = null;
+    do {
+        currentDate = Date.now();
+        // console.log(currentDate - date);
+    } while (currentDate - date < miliseconds);
+}
+
+
+client.init(uid1, {
     success: success,
     error: error,
     preload: 1,
     autotsart: 1
 });
 client1.init(uid, {
+    success: success,
+    error: error,
+    preload: 1,
+    autotsart: 1
+});
+client2.init(uid2, {
     success: success,
     error: error,
     preload: 1,
