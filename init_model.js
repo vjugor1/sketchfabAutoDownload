@@ -12,6 +12,20 @@ var iframe2 = document.getElementById('api-frame2');
 var uid = 'aa63eefcd48c41d3a9d41e0a32ee6dbb';
 var uid1 = 'be035da2e43e4f66a2405fa1508ef293';
 var uid2 = '493dddfd34ac4f19aa88ef6281f22459';
+
+var canvas = document.createElement('canvas');
+var ctx = canvas.getContext('2d');
+canvas.width = 2;
+canvas.height = 2;
+var myMaterials;
+var getColorAsTextureURL = function getColorAsTextureURL(color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, 2, 2);
+    return canvas.toDataURL('image/png', 1.0);
+};
+var blackTextureURL = getColorAsTextureURL('black');
+var blackTextureUID;
+
 var coeff = 10000;
 var date = Date.now();  //or use any other date
 date = date + 21000;
@@ -42,19 +56,23 @@ var success = function success(api) {
     var initPosReg = false;
     var initLen = 0;
 
+
+
     _loop = function loop() {
         if (!initPosReg) {
             var local_time = Date.now();
-            console.log(rounded_date);
+            // console.log(rounded_date);
             sleep(rounded_date - local_time);
             api.getCameraLookAt(function (err, camera) {
-                // console.log(camera.position); // [x, y, z]
-                // console.log(camera.target); // [x, y, z]
-
                 initLen = Math.sqrt((camera.position[0]) * (camera.position[0]) +
                     (camera.position[1]) * (camera.position[1]) +
                     (camera.position[2]) * (camera.position[2]));
                 console.log("Init Length", initLen);
+                api.getTextureList(function (err, textures) {
+                    if (!err) {
+                        console.log(textures);
+                    }
+                });
                 initPosReg = true;
             });
         }
@@ -78,6 +96,12 @@ var success = function success(api) {
             if (err) console.error(err);
             console.log('=> Camera Start Callback');
         });
+        // api.focusOnVisibleGeometries(function (err) {
+        //     if (!err) {
+        //         window.console.log('Camera recentered');
+        //     }
+        // });
+
 
         api.setCameraLookAtEndAnimationCallback(function (err) {
             if (err) console.error(err);
@@ -85,7 +109,6 @@ var success = function success(api) {
             // console.log('initlen', initLen);
             // console.log('screenstaken', screenstaken);
             if ((initLen != 0) && (screenstaken <= (4 + 2) * 3) && (screenstaken > 0)) {
-                console.log("curr cam", currentCameraPosition.eye[1])
                 if (currentCameraPosition.eye[1] != -1) {
                     api.getScreenShot(800, 800, 'image/png', function (err, result) {
                         var anchor = document.createElement('a');
@@ -108,6 +131,18 @@ var success = function success(api) {
     api.start(function () {
 
         api.addEventListener('viewerready', function () {
+            var textures = [];
+            api.addTexture(blackTextureURL, function (err, textureId) {
+                blackTextureUID = textureId;
+            });
+            api.getMaterialList(function (err, materials) {
+                myMaterials = materials;
+                for (var i = 0; i < myMaterials.length; i++) {
+                    var m = myMaterials[i];
+                    textures[m.name] = m.channels.AlbedoPBR.texture;
+                    console.log(m.name, m);
+                }
+            });
             api.getRootMatrixNode(function (err, nodeID) {
                 var direction = 1;
                 setInterval(function () {
