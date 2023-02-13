@@ -6,12 +6,19 @@
 // });
 
 var version = '1.12.1';
-var iframe = document.getElementById('api-frame');
-var iframe1 = document.getElementById('api-frame1');
-var iframe2 = document.getElementById('api-frame2');
-var uid = 'aa63eefcd48c41d3a9d41e0a32ee6dbb';
-var uid1 = 'be035da2e43e4f66a2405fa1508ef293';
-var uid2 = '493dddfd34ac4f19aa88ef6281f22459';
+var uids = ['9d73d65e706f4c6fa89a5d54307904e2', '6a63b0a50c064f2c8c0f0b2277a2363f', '7ebaf83ddec74174b821029e42a470f6', '7e8a61dd67b341e987e88299af27fe57'];
+var iframeidx = 0;
+var iframes = [];
+for (var i = 0; i < uids.length; i++) {
+    if (i == 0) {
+        iframes.push(document.getElementById('api-frame'));
+    } else {
+        iframes.push(document.getElementById('api-frame' + String(i)));
+    }
+
+};
+
+const modelsScreens = new Map();
 
 var canvas = document.createElement('canvas');
 var ctx = canvas.getContext('2d');
@@ -30,12 +37,14 @@ var coeff = 10000;
 var date = Date.now();  //or use any other date
 date = date + 21000;
 var rounded_date = new Date(Math.round(date / coeff) * coeff);
-var screenstaken = 0;
+
 var easings;
 var cameraPosition;
-var client = new window.Sketchfab(version, iframe);
-var client1 = new window.Sketchfab(version, iframe1);
-var client2 = new window.Sketchfab(version, iframe2);
+var clients = [];
+for (var i = 0; i < iframes.length; i++) {
+    clients.push(new window.Sketchfab(version, iframes[i]));
+};
+
 var error = function error() {
     console.error('Sketchfab API error');
 };
@@ -47,32 +56,32 @@ function saveBase64AsFile(base64, fileName) {
     link.click();
 }
 
-var success = function success(api) {
+var success = function success(api, uid) {
     var target = [0.0, 0.0, 0.0];
-
     var currentCamera = 0;
+    let screenstaken = 0;
     // console.log("Initial position", init_pos)
     var _loop;
     var initPosReg = false;
     var initLen = 0;
-
-
-
+    let api_local = api;
+    // console.log('sdfas', uid)
     _loop = function loop() {
         if (!initPosReg) {
             var local_time = Date.now();
             // console.log(rounded_date);
             sleep(rounded_date - local_time);
-            api.getCameraLookAt(function (err, camera) {
+            api_local.getCameraLookAt(function (err, camera) {
                 initLen = Math.sqrt((camera.position[0]) * (camera.position[0]) +
                     (camera.position[1]) * (camera.position[1]) +
                     (camera.position[2]) * (camera.position[2]));
                 console.log("Init Length", initLen);
-                api.getTextureList(function (err, textures) {
+                api_local.getTextureList(function (err, textures) {
                     if (!err) {
                         console.log(textures);
                     }
                 });
+                modelsScreens.set(initLen, 0);
                 initPosReg = true;
             });
         }
@@ -91,10 +100,10 @@ var success = function success(api) {
                 cameraPosition[currentCamera % cameraPosition.length].eye[2]]
             };
         };
-        console.log('=> Camera loop ', currentCameraPosition.eye, [0.0, 0.0, initLen * 0.6]);
-        api.setCameraLookAt(currentCameraPosition.eye, [0.0, 0.0, initLen * 0.6], 2, function (err) {
+        // console.log('=> Camera loop ', currentCameraPosition.eye, [0.0, 0.0, initLen * 0.6]);
+        api_local.setCameraLookAt(currentCameraPosition.eye, [0.0, 0.0, initLen * 0.6], 2, function (err) {
             if (err) console.error(err);
-            console.log('=> Camera Start Callback');
+            // console.log('=> Camera Start Callback');
         });
         // api.focusOnVisibleGeometries(function (err) {
         //     if (!err) {
@@ -103,50 +112,65 @@ var success = function success(api) {
         // });
 
 
-        api.setCameraLookAtEndAnimationCallback(function (err) {
+        api_local.setCameraLookAtEndAnimationCallback(function (err) {
             if (err) console.error(err);
-            console.log('=> Camera End Callback');
+            // console.log('=> Camera End Callback');
             // console.log('initlen', initLen);
             // console.log('screenstaken', screenstaken);
-            if ((initLen != 0) && (screenstaken <= (4 + 2) * 3) && (screenstaken > 0)) {
-                if (currentCameraPosition.eye[1] != -1) {
-                    api.getScreenShot(800, 800, 'image/png', function (err, result) {
-                        var anchor = document.createElement('a');
-                        anchor.href = result;
-                        anchor.download = 'screenshot.png';
-                        anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
-                        saveBase64AsFile(result, uid + '/tst.jpg')
-                    });
+            // if ((initLen != 0) && (screenstaken <= (4 + 2) * iframes.length) && (screenstaken > 0)) {
+            //     if ((currentCameraPosition.eye[1] != -1) && (modelsScreens.get(initLen) <= 4)) {
+            // if (currentCameraPosition.eye[1] != -1) {
+            // get cpu temp
+            //     var func_name = async funtion () {
+            //         let data = await execute_command(payload);
+            //    };
+
+            api_local.getScreenShot(800, 800, 'image/png', function (err, result) {
+                var anchor = document.createElement('a');
+                anchor.href = result;
+                anchor.download = 'screenshot.png';
+                anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
+                // sleep(initLen);
+                if ((screenstaken > 1) && (screenstaken <= cameraPosition.length + 4)) {
+                    saveBase64AsFile(result, 'model_' + uid + '_tst.jpg');
                 };
+                // sleep(initLen);
+                modelsScreens.set(initLen, modelsScreens.get(initLen) + 1);
+                console.log(modelsScreens);
+                // try ty insert it here
+                // resolve(true);
+                setTimeout(_loop, 1000);
+            });
 
-            };
+            //     };
+            // };
             screenstaken++;
+            console.log(uid, screenstaken);
 
-            setTimeout(_loop, 8000);
+
         });
         currentCamera++;
         // api.setCameraEasing(easings[Math.floor(Math.random() * easings.length)]);
 
     };
-    api.start(function () {
+    api_local.start(function () {
 
-        api.addEventListener('viewerready', function () {
+        api_local.addEventListener('viewerready', function () {
             var textures = [];
-            api.addTexture(blackTextureURL, function (err, textureId) {
+            api_local.addTexture(blackTextureURL, function (err, textureId) {
                 blackTextureUID = textureId;
             });
-            api.getMaterialList(function (err, materials) {
+            api_local.getMaterialList(function (err, materials) {
                 myMaterials = materials;
                 for (var i = 0; i < myMaterials.length; i++) {
                     var m = myMaterials[i];
                     textures[m.name] = m.channels.AlbedoPBR.texture;
-                    console.log(m.name, m);
+                    // console.log(m.name, m);
                 }
             });
-            api.getRootMatrixNode(function (err, nodeID) {
+            api_local.getRootMatrixNode(function (err, nodeID) {
                 var direction = 1;
                 setInterval(function () {
-
                 }, 2000);
             });
             setTimeout(_loop, 8000);
@@ -165,25 +189,15 @@ function sleep(miliseconds) {
     } while (currentDate - date < miliseconds);
 }
 
-
-client.init(uid1, {
-    success: success,
-    error: error,
-    preload: 1,
-    autotsart: 1
-});
-client1.init(uid, {
-    success: success,
-    error: error,
-    preload: 1,
-    autotsart: 1
-});
-client2.init(uid2, {
-    success: success,
-    error: error,
-    preload: 1,
-    autotsart: 1
-});
+for (var i = 0; i < clients.length; i++) {
+    let uid = uids[i];
+    clients[i].init(uid, {
+        success: function (data) { success(data, uid) },//success.apply(null, [uids[i]]),
+        error: error,
+        preload: 1,
+        autotsart: 1
+    });
+};
 easings = ['easeLinear', 'easeOutQuad', 'easeInQuad', 'easeInOutQuad', 'easeOutCubic', 'easeInCubic', 'easeInOutCubic', 'easeOutQuart', 'easeInQuart', 'easeInOutQuart', 'easeOutQuintic', 'easeInQuintic', 'easeInOutQuintic', 'easeOutSextic', 'easeInSextic', 'easeInOutSextic', 'easeOutSeptic', 'easeInSeptic', 'easeInOutSeptic', 'easeOutOctic', 'easeInOctic', 'easeInOutOctic', 'easeOutBack', 'easeInBack', 'easeInOutBack', 'easeOutCircle', 'easeInCircle', 'easeInOutCircle', 'easeOutElastic', 'easeInElastic', 'easeInOutElastic', 'easeOutBounce', 'easeInBounce', 'easeInOutBounce'];
 cameraPosition = [{
     eye: [0, -1, 0]
