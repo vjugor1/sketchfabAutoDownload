@@ -6,7 +6,7 @@
 // });
 
 var version = '1.12.1';
-var uids = ['9d73d65e706f4c6fa89a5d54307904e2', '6a63b0a50c064f2c8c0f0b2277a2363f', '7ebaf83ddec74174b821029e42a470f6', '7e8a61dd67b341e987e88299af27fe57'];
+var uids = ['7e8a61dd67b341e987e88299af27fe57'];
 var iframeidx = 0;
 var iframes = [];
 for (var i = 0; i < uids.length; i++) {
@@ -17,6 +17,8 @@ for (var i = 0; i < uids.length; i++) {
     }
 
 };
+var nPositions = 8;
+
 
 const modelsScreens = new Map();
 
@@ -65,6 +67,16 @@ var success = function success(api, uid) {
     var initPosReg = false;
     var initLen = 0;
     let api_local = api;
+
+
+    api_local.addTexture('https://i.imgur.com/4wZw9GO.jpeg', function (err, textureUid) {
+        console.log('fuck', err);
+        if (!err) {
+            window.console.log('New texture registered with UID', textureUid);
+        }
+    });
+
+
     // console.log('sdfas', uid)
     _loop = function loop() {
         if (!initPosReg) {
@@ -78,7 +90,7 @@ var success = function success(api, uid) {
                 console.log("Init Length", initLen);
                 api_local.getTextureList(function (err, textures) {
                     if (!err) {
-                        console.log(textures);
+                        // console.log(textures);
                     }
                 });
                 modelsScreens.set(initLen, 0);
@@ -132,11 +144,11 @@ var success = function success(api, uid) {
                 anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
                 // sleep(initLen);
                 if ((screenstaken > 1) && (screenstaken <= cameraPosition.length + 4)) {
-                    saveBase64AsFile(result, 'model_' + uid + '_tst.jpg');
+                    // saveBase64AsFile(result, 'model_' + uid + '_tst.jpg');
                 };
                 // sleep(initLen);
-                modelsScreens.set(initLen, modelsScreens.get(initLen) + 1);
-                console.log(modelsScreens);
+                // modelsScreens.set(initLen, modelsScreens.get(initLen) + 1);
+                // console.log(modelsScreens);
                 // try ty insert it here
                 // resolve(true);
                 setTimeout(_loop, 1000);
@@ -145,7 +157,7 @@ var success = function success(api, uid) {
             //     };
             // };
             screenstaken++;
-            console.log(uid, screenstaken);
+            // console.log(uid, screenstaken);
 
 
         });
@@ -156,18 +168,41 @@ var success = function success(api, uid) {
     api_local.start(function () {
 
         api_local.addEventListener('viewerready', function () {
+            var myMaterials;
             var textures = [];
-            api_local.addTexture(blackTextureURL, function (err, textureId) {
-                blackTextureUID = textureId;
-            });
+
             api_local.getMaterialList(function (err, materials) {
                 myMaterials = materials;
                 for (var i = 0; i < myMaterials.length; i++) {
                     var m = myMaterials[i];
+
                     textures[m.name] = m.channels.AlbedoPBR.texture;
-                    // console.log(m.name, m);
+                    m.channels.AlbedoPBR.texture = myMaterials[0].channels.AlbedoPBR.texture;
+                    // m.channels.EmitColor.factor = 1;
+                    // m.channels.EmitColor.enable = true;
+                    // m.channels.NormalMap.enable = false;
+                    // m.channels.DiffuseIntensity.enable = false;
+                    // m.channels.MetalnessPBR.enable = false;
+                    // m.channels.AlbedoPBR.enable = false;
+                    // m.channels.DiffuseColor.enable = false;
+                    // m.channels.EmitColor.color = [0.0, 0.0, 1.0];
+                    console.log(m.name, m);
+                    api_local.setMaterial(m);
                 }
             });
+            // console.log('SGFDJOFN', myMaterials)
+            function makeMyModelBlue(enabled) {
+
+                for (var i = 0; i < myMaterials.length; i++) {
+                    var m = myMaterials[i];
+                    // here change only the channel you need to change
+                    m.channels.EmitColor.factor = 1;
+                    m.channels.EmitColor.enable = enabled;
+                    // m.channels.EmitColor.color = [0.0, 0.0, 1.0];
+                    api_local.setMaterial(m);
+                }
+            }
+            // makeMyModelBlue();
             api_local.getRootMatrixNode(function (err, nodeID) {
                 var direction = 1;
                 setInterval(function () {
@@ -199,14 +234,26 @@ for (var i = 0; i < clients.length; i++) {
     });
 };
 easings = ['easeLinear', 'easeOutQuad', 'easeInQuad', 'easeInOutQuad', 'easeOutCubic', 'easeInCubic', 'easeInOutCubic', 'easeOutQuart', 'easeInQuart', 'easeInOutQuart', 'easeOutQuintic', 'easeInQuintic', 'easeInOutQuintic', 'easeOutSextic', 'easeInSextic', 'easeInOutSextic', 'easeOutSeptic', 'easeInSeptic', 'easeInOutSeptic', 'easeOutOctic', 'easeInOctic', 'easeInOutOctic', 'easeOutBack', 'easeInBack', 'easeInOutBack', 'easeOutCircle', 'easeInCircle', 'easeInOutCircle', 'easeOutElastic', 'easeInElastic', 'easeInOutElastic', 'easeOutBounce', 'easeInBounce', 'easeInOutBounce'];
-cameraPosition = [{
-    eye: [0, -1, 0]
-}, {
-    eye: [1, 0, 0]
-}, {
-    eye: [0, 1, 0]
-},
-{
-    eye: [-1, 0, 0]
+rotateVecXY = function (vec, phi) {
+    let distance = Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1]);
+    let rotatedVec = [Math.cos(phi) * distance, Math.sin(phi) * distance, vec[2]];
+    return rotatedVec;
+};
+
+// cameraPosition = [{
+//     eye: [0, -1, 0]
+// }, {
+//     eye: [1, 0, 0]
+// }, {
+//     eye: [0, 1, 0]
+// },
+// {
+//     eye: [-1, 0, 0]
+// }
+// ];
+cameraPosition = [{ eye: [0, -1, 0] }];
+for (let i = 1; i < nPositions; i++) {
+    rotAngle = i / nPositions * 2 * Math.PI;
+    newPos = rotateVecXY(cameraPosition[0].eye, rotAngle);
+    cameraPosition.push({ eye: newPos });
 }
-];
