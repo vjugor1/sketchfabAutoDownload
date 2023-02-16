@@ -17,7 +17,19 @@ for (var i = 0; i < uids.length; i++) {
     }
 
 };
-var nPositions = 8;
+var nPositions = 32;
+function makeTexture(uid) {
+    const texture = {
+        magFilter: "LINEAR",
+        minFilter: "LINEAR_MIPMAP_LINEAR",
+        wrapS: "REPEAT",
+        wrapT: "REPEAT",
+        textureTarget: "TEXTURE_2D",
+        internalFormat: "RGB",
+        uid: uid
+    };
+    return texture;
+}
 
 
 const modelsScreens = new Map();
@@ -67,14 +79,24 @@ var success = function success(api, uid) {
     var initPosReg = false;
     var initLen = 0;
     let api_local = api;
+    function addTexture(textureUrl) {
+        return new Promise((resolve, reject) => {
+            api_local.addTexture(textureUrl, (err, uid) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    resolve(uid);
+                }
+            });
+        });
+    }
 
-
-    api_local.addTexture('https://i.imgur.com/4wZw9GO.jpeg', function (err, textureUid) {
-        console.log('fuck', err);
-        if (!err) {
-            window.console.log('New texture registered with UID', textureUid);
-        }
-    });
+    // api_local.addTexture('https://media.sketchfab.com/models/28ed8a4aae784ebdb505a25e636cbc4b/814716dc6fee4cbcb01f87caefb120fe/textures/ee51bd481b11466ba575359088ac851e/37ae8a38bd5e4f048d41fa1ed765384a.jpeg', function (err, textureUid) {
+    //     console.log('fuck', err);
+    //     if (!err) {
+    //         window.console.log('New texture registered with UID', textureUid);
+    //     }
+    // });
 
 
     // console.log('sdfas', uid)
@@ -144,7 +166,7 @@ var success = function success(api, uid) {
                 anchor.innerHTML = '<img width="100" height="100" src=' + result + '>download';
                 // sleep(initLen);
                 if ((screenstaken > 1) && (screenstaken <= cameraPosition.length + 4)) {
-                    // saveBase64AsFile(result, 'model_' + uid + '_tst.jpg');
+                    saveBase64AsFile(result, 'model_' + uid + '_tst.jpg');
                 };
                 // sleep(initLen);
                 // modelsScreens.set(initLen, modelsScreens.get(initLen) + 1);
@@ -170,39 +192,45 @@ var success = function success(api, uid) {
         api_local.addEventListener('viewerready', function () {
             var myMaterials;
             var textures = [];
+            api_local.setBackground({
+                enabled: true,
+                uid: 'ac8475e46ec94c169ab5774bb1287624'
+            }, function () {
+                console.log('asked');
+            });
+            api_local.setEnvironment({
+                enabled: true,
+                uid: '4024128cf8904b69946e891caac5f305'
+            }, function () {
+                console.log('asked');
+            });
 
             api_local.getMaterialList(function (err, materials) {
                 myMaterials = materials;
-                for (var i = 0; i < myMaterials.length; i++) {
-                    var m = myMaterials[i];
+                // console.log(materials);
+                addTexture(
+                    "https://media.sketchfab.com/models/28ed8a4aae784ebdb505a25e636cbc4b/814716dc6fee4cbcb01f87caefb120fe/textures/ee51bd481b11466ba575359088ac851e/37ae8a38bd5e4f048d41fa1ed765384a.jpeg"
+                ).then((uid) => {
+                    for (var i = 0; i < myMaterials.length; i++) {
+                        var m = myMaterials[i];
 
-                    textures[m.name] = m.channels.AlbedoPBR.texture;
-                    m.channels.AlbedoPBR.texture = myMaterials[0].channels.AlbedoPBR.texture;
-                    // m.channels.EmitColor.factor = 1;
-                    // m.channels.EmitColor.enable = true;
-                    // m.channels.NormalMap.enable = false;
-                    // m.channels.DiffuseIntensity.enable = false;
-                    // m.channels.MetalnessPBR.enable = false;
-                    // m.channels.AlbedoPBR.enable = false;
-                    // m.channels.DiffuseColor.enable = false;
-                    // m.channels.EmitColor.color = [0.0, 0.0, 1.0];
-                    console.log(m.name, m);
-                    api_local.setMaterial(m);
-                }
+                        textures[m.name] = m.channels.AlbedoPBR.texture;
+                        console.log("set for", m.name);
+                        var newTexture = makeTexture(uid);
+                        m.channels.AlbedoPBR.texture = newTexture;
+                        m.channels.MetalnessPBR.factor = 0;
+                        // m.channels.SpecularHardness.factor = 5;
+                        m.channels.GlossinessPBR.factor = 0.3;
+                        m.channels.RoughnessPBR.factor = 1.0;
+                        // m.channels.DiffusePBR.factor = 0.5;
+
+                        api_local.setMaterial(m, function () { });
+                        console.log(m);
+                    }
+
+                });
+
             });
-            // console.log('SGFDJOFN', myMaterials)
-            function makeMyModelBlue(enabled) {
-
-                for (var i = 0; i < myMaterials.length; i++) {
-                    var m = myMaterials[i];
-                    // here change only the channel you need to change
-                    m.channels.EmitColor.factor = 1;
-                    m.channels.EmitColor.enable = enabled;
-                    // m.channels.EmitColor.color = [0.0, 0.0, 1.0];
-                    api_local.setMaterial(m);
-                }
-            }
-            // makeMyModelBlue();
             api_local.getRootMatrixNode(function (err, nodeID) {
                 var direction = 1;
                 setInterval(function () {
