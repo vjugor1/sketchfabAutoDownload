@@ -195,7 +195,7 @@ for (var i = 0; i < clients.length; i++) {
         success: function (data) { success(data, uid) },//success.apply(null, [uids[i]]),
         error: error,
         preload: 1,
-        autotsart: 1,
+        autostart: 1,
         camera: 0,
         animation_autoplay: 0
     });
